@@ -77,6 +77,17 @@
                     <input id="file-input" type="file" name="name" style="display: none;"/>
                     <input id="image-input" type="file" name="image" style="display: none;"/>
                 </div>
+                <div class="pynodeAuthorSubtitle">
+                </div>
+                <div class="pynodeDescription">
+                    <p>EdPySim is an in-browser simulation of the EdPy programming interface for the Edison robot.<br><br>Try the examples below, or write your own!</p>
+                    <ul>
+					<div class = "pageTopSamples">						
+                        <li>
+                            <p><a href="#" onclick="openCode('clap_driving'); return false;">Clap Driving</a></p>
+                        </li>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="appWrapper" id="appWrapper">
@@ -90,7 +101,7 @@
                             <div class="appSectionEnlarge">
                                 <div class="appSectionBarIconDivider"></div>
                                 <div class="appSectionBarIcon"><h3><a href=""
-                                                                      onclick="document.getElementById('file-input').click(); alert('hello');return false;"><img
+                                                                      onclick="document.getElementById('file-input').click(); return false;"><img
                                         src="images/controls/import.png" width="16" height="16"></a></h3></div>
                                 <div class="appSectionBarIcon"><h3><a href=""
                                                                       onclick="userSaveCode(); return false;"><img
@@ -140,18 +151,9 @@
                                 <div id="layout1">
                                     <div class="appSectionBarIcon"><h3><a href=""
                                                                       onclick="document.getElementById('image-input').click(); return false;"><img
-                                        src="images/controls/import.png" width="16" height="16"></a></h3></div>                                
-                                    <div id="layout1On" class="layoutButtonOn" style="display: inherit"><img 
-                                            src="images/controls/layoutButton1.png" width="20" height="20"><a href=""
-                                                                      onclick="document.getElementById('image-input').click(); return false;"></div>
+                                        src="images/controls/import_image.png" width="16" height="16"></a></h3></div>                                
                                     <div id="layout1Off" class="layoutButtonOff" style="display: none"><img
                                             src="images/controls/layoutButton1.png" width="20" height="20"></div>
-                                </div>
-                                <div id="layout2">
-                                    <div id="layout2On" class="layoutButtonOn" style="display: none"><img
-                                            src="images/controls/layoutButton2.png" width="20" height="20"></div>
-                                    <div id="layout2Off" class="layoutButtonOff" style="display: inherit"><img
-                                            src="images/controls/layoutButton2.png" width="20" height="20"></div>
                                 </div>
                             </div>
                         </div>
@@ -209,7 +211,7 @@
 
     function openCode(name) {
         var client = new XMLHttpRequest();
-        client.open("GET", "pynode_projects/" + name + ".py");
+        client.open("GET", "samples/" + name + ".py");
         client.onreadystatechange = function () {
             if (client.readyState == 4) {
                 if (editor_exists) {
@@ -348,9 +350,5 @@
     
     
 </script>
-
-<!-- Relevant links that are not directly referenced. Allows website to be properly read with automatic web crawling. -->
-<a hidden style="display:none" href="pyangelo.py">&nbsp</a>
-<a hidden style="display:none" href="pynode_projects/dijkstra.py">&nbsp</a>
 </body>
 </html>
