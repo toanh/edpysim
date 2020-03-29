@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PyEdSim</title>
+    <title>EdPySim</title>
     <meta name="description" content="Interactive online Graph Theory.">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -304,16 +304,13 @@
 <script type="text/javascript" src="js/brython/brython_stdlib.js?version=0.9.7"></script>
 <script type="text/javascript" src="js/planck-with-testbed.js"></script>
 
-<!--<script type="text/python" class="webworker" id="executor" src="PyAngelo_worker.py">-->
 <script type="text/python" class="webworker" id="executor" src="PyAngelo_EDSim_Worker.py">
 </script>
 <script type="text/python3" id="tests_editor">
 
 	import pyangeloEDSim    
-	#import pyangelo
     
 	from browser import window, document, alert
-	#document["run"].bind("click", pyangelo.save_code)
 	document["run"].bind("click", pyangeloEDSim.button_play)
 
 </script>
@@ -322,33 +319,10 @@
 
     document.getElementById("run").style.backgroundColor = "#6E6E6E";
 
-
     document.getElementById("run").style.cursor = "pointer";
 
     writeOutput("<p style='color:green;'>Done!</p>", true);
-
-    /*
-    document.getElementById("layout1").onclick = function (evt) {
-        if (document.getElementById("layout1On").style.display === "none") {
-            document.getElementById("layout1On").style.display = "inherit";
-            document.getElementById("layout1Off").style.display = "none";
-            document.getElementById("layout2On").style.display = "none";
-            document.getElementById("layout2Off").style.display = "inherit";
-            
-        }
-    };
-    */  
-    
-    document.getElementById("layout2").onclick = function () {
-        if (document.getElementById("layout2On").style.display === "none") {
-            document.getElementById("layout2On").style.display = "inherit";
-            document.getElementById("layout2Off").style.display = "none";
-            document.getElementById("layout1On").style.display = "none";
-            document.getElementById("layout1Off").style.display = "inherit";
-        }
-    };
-    
-    
+        
 </script>
 </body>
 </html>

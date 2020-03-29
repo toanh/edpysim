@@ -83,8 +83,10 @@ class EdSim():
     DistanceUnits   = CM
     Tempo           = TEMPO_MEDIUM
     
+    
+    
     def __init__(self):
-        pass
+        self.body_id_counter = 0
         
     def __checkQuit(self):
         global array
@@ -120,6 +122,15 @@ class EdSim():
         
     def PlayBeep(self):
         send_message(["beep"])
+        
+    def AddBall(self, x, y, radius):
+        id = self.body_id_counter
+        
+        self.body_id_counter += 1
+        
+        send_message(["addBall", id, x, y, radius])
+        
+        return id
         
     def ReadClapSensor(self):
         global array

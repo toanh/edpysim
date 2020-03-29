@@ -87,35 +87,16 @@ class EDSim():
     Tempo           = TEMPO_MEDIUM
     
     def __init__(self, ctx, world, screen_width, screen_height, ED_Sim):
-        self.reset()
+        
         self.ctx = ctx
         self.world = world
         self.screen_width = screen_width
         self.screen_height = screen_height
         
-        self.ED_Sim = ED_Sim
+        self.box = None
+        self.reset()
         
-        self.box = self.world.createDynamicBody(pl.Vec2.new(self.position[0], self.position[1]))
-
-        
-        vertices1 = [pl.Vec2(-self.width/2,		3.0 * self.height/4),
-                    pl.Vec2(self.width/2, 		3.0 * self.height/4),
-                    pl.Vec2(self.width/2, 		0),
-                    pl.Vec2(-self.width/2, 		0)]
-        shape1 = pl.Polygon.new(vertices1)              
-        self.box.createFixture(shape1, 0.0)                   
-        
-        vertices2 = [pl.Vec2(-self.width/2, 	0),
-                    pl.Vec2(self.width/2, 		0),
-                    pl.Vec2(self.width/2, 		-self.height/4),
-                    pl.Vec2(-self.width/2, 		-self.height/4)]
-        shape2 = pl.Polygon.new(vertices2)        
-        self.box.createFixture(shape2, 0.0)
-        
-        
-        #self.box.createFixture(pl.Circle.new(30 * visual_scale), 10.0);
-                
-        self.box.setGravityScale(0)   
+        self.ED_Sim = ED_Sim                        
         
     def reset(self):
         self.position           = Vector(250  * visual_scale, 200 * visual_scale)
@@ -138,6 +119,32 @@ class EDSim():
         
         self.height = 64 * visual_scale
         self.width = 62 * visual_scale
+        
+        if self.box is not None:        
+            self.world.destroyBody(self.box)
+                
+        self.box = self.world.createDynamicBody(pl.Vec2.new(self.position[0], self.position[1]))
+
+        
+        vertices1 = [pl.Vec2(-self.width/2,		3.0 * self.height/4),
+                    pl.Vec2(self.width/2, 		3.0 * self.height/4),
+                    pl.Vec2(self.width/2, 		0),
+                    pl.Vec2(-self.width/2, 		0)]
+        shape1 = pl.Polygon.new(vertices1)              
+        self.box.createFixture(shape1, 0.0)                   
+        
+        vertices2 = [pl.Vec2(-self.width/2, 	0),
+                    pl.Vec2(self.width/2, 		0),
+                    pl.Vec2(self.width/2, 		-self.height/4),
+                    pl.Vec2(-self.width/2, 		-self.height/4)]
+        shape2 = pl.Polygon.new(vertices2)        
+        self.box.createFixture(shape2, 0.0)
+        
+        
+        #self.box.createFixture(pl.Circle.new(30 * visual_scale), 10.0);
+                
+        self.box.setGravityScale(0)   
+        
         
     def update(self):
         if self.current_rotation < self.target_rotation:
@@ -163,30 +170,6 @@ class EDSim():
             
             
     def draw(self):
-        
-        '''
-        fixture = self.box.getFixtureList()#.getNext()
-        
-        self.ctx.save()
-        self.ctx.translate(self.box.getPosition().x / visual_scale, (self.screen_height -(self.box.getPosition().y / visual_scale)))
-        self.ctx.rotate(-self.box.getAngle())  
-		
-        f = 0
-        while fixture is not None:
-            f += 1
-            
-            vertices = fixture.getShape().m_vertices               
-            points = [[v.x / visual_scale, v.y / visual_scale] for v in vertices]
-            
-            self.ED_Sim.drawShape(points, 0, 1, 0)
-
-            
-            fixture = fixture.getNext()
-            
-        self.ctx.restore()
-
-        window.console.log(f"Number of fixtures: {f}")
-        '''
         return
                
 
@@ -246,10 +229,13 @@ class PyAngeloEDSim():
         
         self.debug_draw = True
         
-        ####### Begin Test box2d physics
+        ####### Begin box2d physics
 
         self.world = pl.World.new(pl.Vec2.new(0, -1000 * visual_scale));
-
+        
+        # dictionary of ID to dynamic bodies
+        self.bodies = {}
+        
         # screen edges
         # bottom
         self.world.createBody().createFixture(pl.Edge.new(pl.Vec2(0.0, 0.0), pl.Vec2.new(self.width * visual_scale, 0.0)), 0.0);
@@ -260,29 +246,37 @@ class PyAngeloEDSim():
         # top
         self.world.createBody().createFixture(pl.Edge.new(pl.Vec2(self.width * visual_scale, self.height * visual_scale), pl.Vec2.new(0, self.height * visual_scale)), 0.0);
         
-        self.c1 = self.world.createDynamicBody(pl.Vec2.new(135.0 * visual_scale, 200 * visual_scale))        
-        self.c1.createFixture(pl.Circle.new(10 * visual_scale), {"restitution": 0.2, "friction": 1.0, "density": 1.0})
-        self.c1.setAngularDamping(0.1)
-        self.c1.setLinearDamping(0.2)
-        self.c1.setGravityScale(0)
+        #self.addBall(0, 135, 200, 10)
 
-        self.c2 = self.world.createDynamicBody(pl.Vec2.new(127.0 * visual_scale, 100 * visual_scale))
-        self.c2.createFixture(pl.Circle.new(20 * visual_scale), {"restitution": 0.2, "friction": 1.0, "density": 1.0});   
-        self.c2.setAngularDamping(0.1)
-        self.c2.setLinearDamping(0.2)
-        self.c2.setGravityScale(0)
-        
+        #self.addBall(1, 127, 100, 20)
+
         self.ed = EDSim(self.ctx, self.world, self.width, self.height, self)
 
-        ####### End Test box2d physics        
+        ####### End box2d physics        
         
         self.reset()
 
     def reset(self):
-        self.ed.reset()
+        self.ed.reset()        
         global array
         array[KEY_ESC] = 0
         
+    def removeAllBodies(self):
+        for body in self.bodies.keys():
+            self.world.destroyBody(body)
+        self.bodies = {}
+        
+    def addBall(self, id, x, y, radius):
+        new_ball = self.world.createDynamicBody(pl.Vec2.new(x * visual_scale, y * visual_scale))        
+        new_ball.createFixture(pl.Circle.new(radius * visual_scale), {"restitution": 0.2, "friction": 1.0, "density": 1.0})
+        new_ball.setAngularDamping(0.1)
+        new_ball.setLinearDamping(0.2)
+        new_ball.setGravityScale(0)
+        self.bodies[id] = new_ball
+        
+    def removeBall(self, id):
+        self.world.destroyBody(self.bodies[id])
+        del self.bodies[id]                
         
     def _keydown(self, ev):
         window.console.log("key pressed!" + str(ev.which));
@@ -310,6 +304,8 @@ class PyAngeloEDSim():
         
     def stop(self):        
         #timer.clear_interval(self.interval_timer)
+        # remove all bodies
+        self.removeAllBodies()
         self.ed.reset()
         
     def clearclap(self):
@@ -454,53 +450,30 @@ class PyAngeloEDSim():
             
             self.ctx.restore()
             
-            ### Begin Test Physics
+            ### Begin Physics
             
             self.world.step(1/60)
             
-            pos = self.c1.getPosition()
-            orientation = self.c1.getAngle()
-            radius = self.c1.getFixtureList().getShape().getRadius() / visual_scale
-            
-            self.drawCircle(pos.x / visual_scale, pos.y / visual_scale, 10, 1, 0, 0)                               
-            
-            self.ctx.save()
-            self.ctx.translate(pos.x / visual_scale, self.height - pos.y / visual_scale)
-            self.ctx.rotate(-orientation)
-            #self.ctx.scale()
-            self.ctx.drawImage(self.ball_img, - radius, - radius, radius * 2, radius * 2)            
-            self.ctx.restore()
-            
-            pos = self.c2.getPosition()
-            orientation = self.c2.getAngle()
-            radius = self.c2.getFixtureList().getShape().getRadius() / visual_scale
-            
-            self.drawCircle(pos.x / visual_scale, pos.y / visual_scale, 20, 1, 0, 0) 
-
-            self.ctx.save()
-            self.ctx.translate(pos.x / visual_scale, self.height - pos.y / visual_scale)
-            self.ctx.rotate(-orientation)
-            #self.ctx.scale()
-            self.ctx.drawImage(self.ball_img, - radius, - radius, radius * 2, radius * 2)            
-            self.ctx.restore()            
+            for body in self.bodies.values():
+                pos = body.getPosition()
+                orientation = body.getAngle()
+                radius = body.getFixtureList().getShape().getRadius() / visual_scale
+                
+                self.drawCircle(pos.x / visual_scale, pos.y / visual_scale, 10, 1, 0, 0)                               
+                
+                self.ctx.save()
+                self.ctx.translate(pos.x / visual_scale, self.height - pos.y / visual_scale)
+                self.ctx.rotate(-orientation)
+                self.ctx.drawImage(self.ball_img, - radius, - radius, radius * 2, radius * 2)            
+                self.ctx.restore()                             
             
             self.ed.draw()
             
-            ### End Test Physics
+            ### End Physics
             
             
             if self.debug_draw:
                 self.drawDebugLine()
-                '''
-                imageData = Ed.ctx.getImageData(0, 0, self.width, self.height)
-                x = 10
-                y = 100
-                imageData.data[((self.height - y) * self.width + x) * 4] = 0
-                imageData.data[((self.height - y) * self.width + x) * 4 + 1] = 255
-                imageData.data[((self.height - y) * self.width + x) * 4 + 2] = 0
-                imageData.data[((self.height - y) * self.width + x) * 4 + 3] = 255
-                Ed.ctx.putImageData(imageData, 0, 0)
-                '''
 
             
             if self.state == self.STATE_RUN:
@@ -556,6 +529,10 @@ def onmessage(e):
             Ed.ed.leftLED = e.data[2]
             '''
             '''
+    elif e.data[0] == "addBall":
+        Ed.addBall(e.data[1], e.data[2], e.data[3], e.data[4])
+    elif e.data[0] == "removeBall":
+        Ed.removeBall(e.data[1])
 
     elif e.data[0] == "waitdone":
         window.console.log("finished waiting");
