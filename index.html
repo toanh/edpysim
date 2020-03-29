@@ -41,7 +41,7 @@
                 project_name = pair[1];
                 read_storage = false;
                 var client = new XMLHttpRequest();
-                client.open("GET", "pynode_projects/" + project_name + ".py");
+                client.open("GET", "samples/" + project_name + ".py");
                 client.onreadystatechange = function () {
                     if (client.readyState == 4) {
                         project_src = client.responseText;
@@ -71,9 +71,9 @@
         <div class="pageTopWrapper">
             <div class="pageTop">
                 <div class="pynodeLogo"><img src="images/logo.png" width="120" height="120"></div>
-                <div class="pynodeTitle">PyEdSim</div>
+                <div class="pynodeTitle">EdPySim</div>
                 <div class="pynodeSubtitle">
-                    <h3>PyEd Simulator for the Edison Robot</h3>
+                    <h3>EdPy Simulator for the Edison Robot</h3>
                     <input id="file-input" type="file" name="name" style="display: none;"/>
                     <input id="image-input" type="file" name="image" style="display: none;"/>
                 </div>
