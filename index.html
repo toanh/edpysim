@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PyEdSim</title>
+    <meta name="description" content="Interactive online Graph Theory.">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="css/style.css?version=0.9.7" rel="stylesheet" type="text/css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    
+    <script src="js/resize.js?version=0.9.7"></script>
+    <script>
+        var editor_exists = false;
+        var pynode_output;
+        var pynode_editor;
+        var pynode_console;
+        var enable_editor = true;
+
+        window.onbeforeunload = function () {
+            if (pynode_output !== undefined) {
+                pynode_output.close();
+            }
+            if (pynode_editor !== undefined) {
+                pynode_editor.close();
+            }
+            if (pynode_console !== undefined) {
+                pynode_console.close();
+            }
+            if (editor_exists) {
+                saveCode();
+            }
+        }
+    </script>
+    <script>
+        var read_storage = true;
+        var project_src;
+        var query = window.location.search.substring(1);
+        if (query.length > 0) {
+            var pair = query.split("=");
+            if (pair.length == 2 && pair[0] == "project") {
+                project_name = pair[1];
+                read_storage = false;
+                var client = new XMLHttpRequest();
+                client.open("GET", "pynode_projects/" + project_name + ".py");
+                client.onreadystatechange = function () {
+                    if (client.readyState == 4) {
+                        project_src = client.responseText;
+                        if (editor_exists) {
+                            editor.setValue(project_src, -1);
+                        }
+                    }
+                    else {
+                        read_storage = true;
+                        if (editor_exists) {
+                            loadCode()
+                        }
+                    }
+                };
+                client.send();
+            }
+            var url = window.location.href;
+            var newUrl = url.substring(url.lastIndexOf('/') + 1).split("?")[0];
+            window.history.pushState("object or string", "Title", "" + newUrl);
+        }
+    </script>
+</head>
+
+<body class="pynode" onload="resize();brython({debug:1})" onresize="resize()">
+<div class="pynodeContainer">
+    <div class="pageWholeWrapper">
+        <div class="pageTopWrapper">
+            <div class="pageTop">
+                <div class="pynodeLogo"><img src="images/logo.png" width="120" height="120"></div>
+                <div class="pynodeTitle">PyEdSim</div>
+                <div class="pynodeSubtitle">
+                    <h3>PyEd Simulator for the Edison Robot</h3>
+                    <input id="file-input" type="file" name="name" style="display: none;"/>
+                    <input id="image-input" type="file" name="image" style="display: none;"/>
+                </div>
+            </div>
+        </div>
+        <div class="appWrapper" id="appWrapper">
+            <div class="appContainer" id="appContainer">
+                <div class="appLeft">
+                    <div class="editorWrapper">
+                        <div class="appSectionTitle">
+                            <div class="floatLeft">
+                                <h3>Source</h3>
+                            </div>
+                            <div class="appSectionEnlarge">
+                                <div class="appSectionBarIconDivider"></div>
+                                <div class="appSectionBarIcon"><h3><a href=""
+                                                                      onclick="document.getElementById('file-input').click(); alert('hello');return false;"><img
+                                        src="images/controls/import.png" width="16" height="16"></a></h3></div>
+                                <div class="appSectionBarIcon"><h3><a href=""
+                                                                      onclick="userSaveCode(); return false;"><img
+                                        src="images/controls/save.png" width="16" height="16"></a></h3></div>
+                            </div>
+                        </div>
+                        <div id="editorBox">
+                            <div id="editor"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="appRight">
+                    <div class="outputWrapper">
+                        <div class="appSectionTitle">
+                            <div class="floatLeft">
+                                <h3>Output</h3>
+                            </div>
+                        </div>
+                        <div id="outputBox">
+							<canvas id = "canvas" width="500" height ="400">
+                            <!--<div id="output"></div>-->
+                        </div>
+                        <div class="editorButtonBar">
+                            <div id="run" class="editorButton">
+                                <div id="runPlay">
+                                    <div class="editorButtonIcon"><img src="images/controls/play.png" width="20"
+                                                                       height="20"></div>
+                                    <h4>PLAY</h4>
+                                </div>
+                                <div id="runPlayLoad">
+                                    <div class="editorButtonIcon"><img src="images/controls/loading.png"
+                                                                       width="20" height="20"></div>
+                                    <h4>LOADING</h4>
+                                </div>
+                                <div id="runPause">
+                                    <div class="editorButtonIcon"><img src="images/controls/stop.png" width="20"
+                                                                       height="20"></div>
+                                    <h4>RESET</h4>
+                                </div>
+                                <div id="runResume">
+                                    <div class="editorButtonIcon"><img src="images/controls/play.png" width="20"
+                                                                       height="20"></div>
+                                    <h4>PLAY</h4>
+                                </div>
+                            </div>
+                            <div class="buttonBarLayoutPanel">
+                                <div id="layout1">
+                                    <div class="appSectionBarIcon"><h3><a href=""
+                                                                      onclick="document.getElementById('image-input').click(); return false;"><img
+                                        src="images/controls/import.png" width="16" height="16"></a></h3></div>                                
+                                    <div id="layout1On" class="layoutButtonOn" style="display: inherit"><img 
+                                            src="images/controls/layoutButton1.png" width="20" height="20"><a href=""
+                                                                      onclick="document.getElementById('image-input').click(); return false;"></div>
+                                    <div id="layout1Off" class="layoutButtonOff" style="display: none"><img
+                                            src="images/controls/layoutButton1.png" width="20" height="20"></div>
+                                </div>
+                                <div id="layout2">
+                                    <div id="layout2On" class="layoutButtonOn" style="display: none"><img
+                                            src="images/controls/layoutButton2.png" width="20" height="20"></div>
+                                    <div id="layout2Off" class="layoutButtonOff" style="display: inherit"><img
+                                            src="images/controls/layoutButton2.png" width="20" height="20"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="consoleWrapper">
+                        <div class="appSectionTitle">
+                            <div class="floatLeft">
+                                <h3>Console</h3>
+                            </div>
+                        </div>
+                        <div class="consoleBox">
+                            <div id="console"></div>
+                            <script>document.getElementById("console").innerHTML = "<p>Loading...</p>"</script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script> resize(); </script>
+        
+    </div>
+</div>
+<script src="js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/ace/mode-python.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/ace/ext-language-tools.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    resize();
+    var editor = ace.edit("editor");
+    editor.$blockScrolling = Infinity;
+    editor_exists = true;
+
+    function getCode() {
+        return editor.getValue();
+    }
+
+    function setCode(src) {
+        if (enable_editor) {
+            editor.setValue(src, -1);
+        }
+    }
+
+    function saveCode() {
+        localStorage.setItem("code", getCode())
+    }
+
+    function loadCode() {
+        src = localStorage.getItem("code");
+        if (src === null || src == "") {
+            openCode("clap_driving");
+        }
+        else {
+            editor.setValue(src, -1);
+        }
+    }
+
+    function openCode(name) {
+        var client = new XMLHttpRequest();
+        client.open("GET", "pynode_projects/" + name + ".py");
+        client.onreadystatechange = function () {
+            if (client.readyState == 4) {
+                if (editor_exists) {
+                    editor.setValue(client.responseText, -1);
+                    saveCode();
+                }
+            }
+        };
+        client.send();
+    }
+
+    if (read_storage) {
+        loadCode();
+    }
+
+    if (project_src !== undefined) {
+        editor.setValue(project_src, -1);
+    }
+    var PythonMode = ace.require("ace/mode/python").Mode;
+    editor.session.setMode(new PythonMode());
+    ace.require("ace/ext/language_tools");
+    editor.setOptions({
+        fontSize: "11pt",
+        enableBasicAutocompletion: true
+    });
+
+    editor.on("change", function () {
+        if (pynode_editor !== undefined) {
+            enable_editor = false;
+            if (pynode_editor.enable_editor) pynode_editor.setCode(editor.getValue());
+            enable_editor = true;
+        }
+    });
+
+    document.getElementById("editorBox").style.visibility = "visible";
+</script>
+<script>
+    function writeOutput(data, append) {
+        if (append) document.getElementById("console").innerHTML += data;
+        else document.getElementById("console").innerHTML = data;
+        if (pynode_output === undefined && pynode_console !== undefined) pynode_console.writeOutput(data, append);
+    }
+
+</script>
+
+
+<script type="text/javascript" src="js/filesaver/filesaver.min.js?version=0.9.2"></script>
+<script>
+    function userLoadCode(event) {
+        var files = event.target.files;
+        var file = null;
+        if (files.length > 0) file = files[0];
+        else return;
+        var reader = new FileReader();
+        reader.onload = (function (theFile) {
+            return function (e) {
+                setCode(e.target.result);
+            };
+        })(file);
+        reader.readAsText(file);
+    }
+
+    function userSaveCode() {
+        var text = getCode();
+        var blob = new Blob([text], {type: "text/plain;charset=utf-8;"});
+        saveAs(blob, "project.pynode");
+    }
+
+    function userLoadImage(event) {
+        var files = event.target.files;
+        var file = null;
+        if (files.length > 0) file = files[0];
+        else return;
+        var fr = new FileReader();
+        fr.onload = () => showImage(fr);
+        fr.readAsDataURL(file);        
+    }
+    
+    function showImage(fileReader) {
+        var img = document.getElementById("bg");
+        img.onload = () => getImageData(img);
+        img.src = fileReader.result;
+    }      
+    
+    document.getElementById('file-input').addEventListener('change', userLoadCode, false);
+    document.getElementById('image-input').addEventListener('change', userLoadImage, false);
+</script>
+
+<script type="text/javascript" src="js/brython/brython.js?version=0.9.7"></script>
+<script type="text/javascript" src="js/brython/brython_stdlib.js?version=0.9.7"></script>
+<script type="text/javascript" src="js/planck-with-testbed.js"></script>
+
+<!--<script type="text/python" class="webworker" id="executor" src="PyAngelo_worker.py">-->
+<script type="text/python" class="webworker" id="executor" src="PyAngelo_EDSim_Worker.py">
+</script>
+<script type="text/python3" id="tests_editor">
+
+	import pyangeloEDSim    
+	#import pyangelo
+    
+	from browser import window, document, alert
+	#document["run"].bind("click", pyangelo.save_code)
+	document["run"].bind("click", pyangeloEDSim.button_play)
+
+</script>
+
+<script>
+
+    document.getElementById("run").style.backgroundColor = "#6E6E6E";
+
+
+    document.getElementById("run").style.cursor = "pointer";
+
+    writeOutput("<p style='color:green;'>Done!</p>", true);
+
+    /*
+    document.getElementById("layout1").onclick = function (evt) {
+        if (document.getElementById("layout1On").style.display === "none") {
+            document.getElementById("layout1On").style.display = "inherit";
+            document.getElementById("layout1Off").style.display = "none";
+            document.getElementById("layout2On").style.display = "none";
+            document.getElementById("layout2Off").style.display = "inherit";
+            
+        }
+    };
+    */  
+    
+    document.getElementById("layout2").onclick = function () {
+        if (document.getElementById("layout2On").style.display === "none") {
+            document.getElementById("layout2On").style.display = "inherit";
+            document.getElementById("layout2Off").style.display = "none";
+            document.getElementById("layout1On").style.display = "none";
+            document.getElementById("layout1Off").style.display = "inherit";
+        }
+    };
+    
+    
+</script>
+
+<!-- Relevant links that are not directly referenced. Allows website to be properly read with automatic web crawling. -->
+<a hidden style="display:none" href="pyangelo.py">&nbsp</a>
+<a hidden style="display:none" href="pynode_projects/dijkstra.py">&nbsp</a>
+</body>
+</html>
