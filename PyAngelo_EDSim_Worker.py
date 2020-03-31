@@ -77,6 +77,9 @@ class EdSim():
     
     CLAP_DETECTED       = True
     CLAP_NOT_DETECTED   = False
+    
+    LINE_ON_WHITE       = True
+    LINE_ON_BLACK       = False
         
     #settings
     EdisonVersion   = V2
@@ -94,8 +97,19 @@ class EdSim():
             console.log("Escape detected!")
             send_message(["stop"])
             raise Exception("QUIT requested")    
+            
+    def LineTrackerLed(self, state):
+        send_message(["linetracker", state])      
+
+    def ReadLineState(self):
+        # the linestate is constantly updated by pyangeloEDSim in the sharedarraybuffer
+        if array[511] == 0:
+            return EdSim.LINE_ON_BLACK
+        elif array[511] == 1:
+            return EdSim.LINE_ON_WHITE
+        else:
+            return None
     
-    #Ed.Drive(Ed.FORWARD, Ed.SPEED_10, 15)
     def Drive(self, direction, speed, duration):
         console.log("Trying to drive")
         

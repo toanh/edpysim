@@ -113,6 +113,8 @@ class EDSim():
         
         self.leftLED            = False
         self.rightLED           = False
+        
+        self.lineTracker        = False
                 
         self.img = html.IMG(src = "ed.png")  
         self.led_img = html.IMG(src = "led.png")
@@ -214,7 +216,7 @@ class PyAngeloEDSim():
         document.bind("keydown", self._keydown)
         document.bind("keyup", self._keyup)           
                 
-        test_buff = window.SharedArrayBuffer.new(255)
+        test_buff = window.SharedArrayBuffer.new(512)
         array = window.Int8Array.new(test_buff)
         
         window.console.log("Attempting to send shared data")
@@ -245,10 +247,8 @@ class PyAngeloEDSim():
         self.world.createBody().createFixture(pl.Edge.new(pl.Vec2(self.width * visual_scale, 0.0), pl.Vec2.new(self.width  * visual_scale, self.height * visual_scale)), 0.0);       
         # top
         self.world.createBody().createFixture(pl.Edge.new(pl.Vec2(self.width * visual_scale, self.height * visual_scale), pl.Vec2.new(0, self.height * visual_scale)), 0.0);
-        
-        #self.addBall(0, 135, 200, 10)
-
-        #self.addBall(1, 127, 100, 20)
+                
+        self.lineTrackerRef = [0,0,0,0]
 
         self.ed = EDSim(self.ctx, self.world, self.width, self.height, self)
 
@@ -353,9 +353,45 @@ class PyAngeloEDSim():
 
         self.ctx.arc(x, self.height - y, radius, 0, 2 * math.pi, True);
 
-        #self.ctx.fill();
+        self.ctx.stroke()   
 
-        self.ctx.stroke()      
+    def getLineTrackerSensor(self):
+        pixel = window.Int8Array.new(4)      
+        
+        # TODO: adjust this so that the sensor is at the tip of the edison
+        # right now it's at the centre of mass
+        x = self.ed.box.getPosition().x  / visual_scale
+        y = self.height - self.ed.box.getPosition().y / visual_scale
+            
+        imageData = Ed.ctx.getImageData(x, y, 1, 1);
+        
+        window.console.log("current pixel:" + str(x), str(y) , str(imageData.data[0]) + ","+ str(imageData.data[1]) + ","+ str(imageData.data[2]) + ","+ str(imageData.data[3]))
+        
+        return imageData.data
+        
+    def setReferenceBrightness(self):
+        self.ctx.save()
+        self.ctx.drawImage(self.bg, 0, 0)#, self.width, self.height)
+        pixel = self.getLineTrackerSensor()
+        # brightness = sum of squares
+        self.ref_brightness = (pixel[0] ** 2 + pixel[1] ** 2 + pixel[2] ** 2)   
+        self.ctx.restore()
+        
+        window.console.log("ref brightness:" + str(self.ref_brightness))      
+
+    def readLineState(self):
+        if Ed.ed.lineTracker:
+            pixel = self.getLineTrackerSensor()
+            brightness = (pixel[0] ** 2 + pixel[1] ** 2 + pixel[2] ** 2)
+            
+            delta = brightness - self.ref_brightness
+            if delta > 50:
+                array[511] = 1      # LINE_ON_WHITE
+            else:
+                array[511] = 0      # LINE_ON_BLACK
+        else:
+            array[511] = -1         # line tracking is not on, so N/A
+        window.console.log(array[511])
 
     def drawShape(self, points, r=1.0, g=1.0, b=1.0, a=1.0):
         r = min(r, 1.0)
@@ -375,8 +411,6 @@ class PyAngeloEDSim():
                 self.ctx.moveTo(point[0], - point[1])
             self.ctx.lineTo(point[0], - point[1])
         self.ctx.closePath()
-
-        #self.ctx.fill();
 
         self.ctx.stroke()      
                 
@@ -399,7 +433,6 @@ class PyAngeloEDSim():
                     self.starting_text = self.starting_text[:-5]
             self.ctx.fillText(self.starting_text, 100, 200); 
 
-            
         else:
             # update
             
@@ -423,6 +456,11 @@ class PyAngeloEDSim():
             
             self.ctx.fillRect(0, 0, self.width, self.height)                          
             self.ctx.drawImage(self.bg, 0, 0)#, self.width, self.height)
+            
+            # getting the image pixel data underneath the edision
+            # need to call this before drawing the edison, otherwise the pixels of the
+            # edison will be read instead of the background
+            self.readLineState()
             
             self.ctx.save()
             x = self.ed.box.getPosition().x  / visual_scale
@@ -449,7 +487,9 @@ class PyAngeloEDSim():
                 self.ctx.drawImage(self.ed.led_img, -anchorX * width, -anchorY * height)
             
             self.ctx.restore()
-            
+                        
+
+
             ### Begin Physics
             
             self.world.step(1/60)
@@ -471,11 +511,9 @@ class PyAngeloEDSim():
             
             ### End Physics
             
-            
             if self.debug_draw:
                 self.drawDebugLine()
 
-            
             if self.state == self.STATE_RUN:
                 if self.anim_timer <= 0:
                     self.anim_timer = self.blink_running
@@ -516,19 +554,9 @@ def onmessage(e):
         Ed.playBeep()
     elif e.data[0] == "LED":
         if e.data[1] == True:
-            Ed.ed.rightLED = e.data[2]
-            pixel = window.Int8Array.new(4)
-            x = Ed.ed.position[0]
-            y = Ed.ed.position[1]            
-            
-            imageData = Ed.ctx.getImageData(x, y, 1, 1);
-           
-            
-            window.console.log("Pixel: ", str(imageData.data[0]), ",",  str(imageData.data[1]), ",", str(imageData.data[2]), ",", str(imageData.data[3]))            
+            Ed.ed.rightLED = e.data[2]         
         else:
             Ed.ed.leftLED = e.data[2]
-            '''
-            '''
     elif e.data[0] == "addBall":
         Ed.addBall(e.data[1], e.data[2], e.data[3], e.data[4])
     elif e.data[0] == "removeBall":
@@ -547,6 +575,10 @@ def onmessage(e):
         do_print(e.data[1])
     elif e.data[0] == "error":
         do_print(e.data[1], "red")        
+    elif e.data[0] == "linetracker":
+        Ed.ed.lineTracker = e.data[1]
+        if e.data[1]:
+            Ed.setReferenceBrightness()
 
 def format_string_HTML(s):
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>").replace("\"", "&quot;").replace("'", "&apos;").replace(" ", "&nbsp;")
