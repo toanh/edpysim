@@ -11,7 +11,7 @@ from vector import *
 from browser import document, window, alert, timer, worker, bind, html, load
 from browser.local_storage import storage
 
-load("howler.js")
+load("js/howler.js")
 load("js/planck-with-testbed.js")
 
 # Cursor control and motion
@@ -175,7 +175,7 @@ class EDSim():
         return
                
 
-class PyAngeloEDSim():
+class EdSim():
     # states
     STATE_WAIT      =   0
     STATE_STOP      =   1
@@ -527,7 +527,7 @@ class PyAngeloEDSim():
             #self.ctx.drawImage(self.ed.img, self.ed.position[0] - self.ed.width//2, \
             #                                self.height - self.ed.position[1] - self.ed.height//2)
                                         
-Ed = PyAngeloEDSim()
+Ed = EdSim()
 
 @bind(PyAngeloWorker, "message")
 def onmessage(e):

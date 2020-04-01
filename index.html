@@ -304,14 +304,14 @@
 <script type="text/javascript" src="js/brython/brython_stdlib.js?version=0.9.7"></script>
 <script type="text/javascript" src="js/planck-with-testbed.js"></script>
 
-<script type="text/python" class="webworker" id="executor" src="PyAngelo_EDSim_Worker.py">
+<script type="text/python" class="webworker" id="executor" src="edsim_worker.py">
 </script>
 <script type="text/python3" id="tests_editor">
 
-	import pyangeloEDSim    
+	import edsim    
     
 	from browser import window, document, alert
-	document["run"].bind("click", pyangeloEDSim.button_play)
+	document["run"].bind("click", edsim.button_play)
 
 </script>
 
