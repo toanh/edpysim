@@ -11,7 +11,7 @@ from vector import *
 from browser import document, window, alert, timer, worker, bind, html, load
 from browser.local_storage import storage
 
-load("howler.js")
+load("js/howler.js")
 load("js/planck-with-testbed.js")
 
 # Cursor control and motion
@@ -116,8 +116,8 @@ class EDSim():
         
         self.lineTracker        = False
                 
-        self.img = html.IMG(src = "ed.png")  
-        self.led_img = html.IMG(src = "led.png")
+        self.img = html.IMG(src = "images/edsim/ed.png")  
+        self.led_img = html.IMG(src = "images/edsim/led.png")
         
         self.height = 64 * visual_scale
         self.width = 62 * visual_scale
@@ -175,7 +175,7 @@ class EDSim():
         return
                
 
-class PyAngeloEDSim():
+class EdSim():
     # states
     STATE_WAIT      =   0
     STATE_STOP      =   1
@@ -191,11 +191,11 @@ class PyAngeloEDSim():
         self.width = self.canvas.width
         self.height = self.canvas.height   
         
-        self.bg = html.IMG(src = "carpet.jpg", id="bg", style={"display": "none"}) 
+        self.bg = html.IMG(src = "images/edsim/carpet.jpg", id="bg", style={"display": "none"}) 
         document <= self.bg
         
-        self.ball_img = html.IMG(src = "ball.png")  
-        self.img = html.IMG(src = "ed.png")  
+        self.ball_img = html.IMG(src = "images/edsim/ball.png")  
+        self.img = html.IMG(src = "images/edsim/ed.png")  
         
         self.bgcolor = Vector(0, 0, 0, 1)
         
@@ -223,8 +223,8 @@ class PyAngeloEDSim():
         PyAngeloWorker.send(test_buff) 
         
         howl = window.Howl
-        self.clap_sound = howl.new({"src": ["clap.mp3"]})
-        self.beep_sound = howl.new({"src": ["beep.mp3"]})
+        self.clap_sound = howl.new({"src": ["audio/clap.mp3"]})
+        self.beep_sound = howl.new({"src": ["audio/beep.mp3"]})
 
         self.state = self.STATE_WAIT
         self.interval_timer = timer.set_interval(self.update, 16)
@@ -527,7 +527,7 @@ class PyAngeloEDSim():
             #self.ctx.drawImage(self.ed.img, self.ed.position[0] - self.ed.width//2, \
             #                                self.height - self.ed.position[1] - self.ed.height//2)
                                         
-Ed = PyAngeloEDSim()
+Ed = EdSim()
 
 @bind(PyAngeloWorker, "message")
 def onmessage(e):
