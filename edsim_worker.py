@@ -74,7 +74,7 @@ class EdSim():
     SPEED_8             =   8
     SPEED_9             =   9
     SPEED_10            =  10    
-    SPEED_FULL          =   0
+    SPEED_FULL          =  11
     
     CLAP_DETECTED       = True
     CLAP_NOT_DETECTED   = False
@@ -103,7 +103,7 @@ class EdSim():
         send_message(["linetracker", state])      
 
     def ReadLineState(self):
-        # the linestate is constantly updated by pyangeloEDSim in the sharedarraybuffer
+        # the linestate is constantly updated by edsim.py in the sharedarraybuffer
         if array[511] == 0:
             return EdSim.LINE_ON_BLACK
         elif array[511] == 1:
@@ -113,9 +113,7 @@ class EdSim():
     
     def Drive(self, direction, speed, duration):
         console.log("Trying to drive")
-        
-        if speed == EdSim.SPEED_FULL:
-            speed = 11
+        print("New drive call.")
             
         self.__checkQuit()
         
@@ -138,6 +136,7 @@ class EdSim():
         send_message(["LED", False, state])
         
     def PlayBeep(self):
+        print("New beep call.")
         send_message(["beep"])
         
     def AddBall(self, x, y, radius):

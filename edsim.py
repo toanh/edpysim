@@ -10,6 +10,7 @@ from vector import *
 
 from browser import document, window, alert, timer, worker, bind, html, load
 from browser.local_storage import storage
+from collections import deque
 
 load("js/howler.js")
 load("js/planck-with-testbed.js")
@@ -77,7 +78,7 @@ class EDSim():
     SPEED_8             =   8
     SPEED_9             =   9
     SPEED_10            =  10    
-    SPEED_FULL          =   0
+    SPEED_FULL          =  11
     
     CLAP_DETECTED       = True
     CLAP_NOT_DETECTED   = False
@@ -100,6 +101,9 @@ class EDSim():
         self.ED_Sim = ED_Sim                        
         
     def reset(self):
+        self.instruction_queue = deque()
+        self.current_instruction = None
+
         self.position           = Vector(250  * visual_scale, 200 * visual_scale)
         self.speed              = 0
         self.heading            = Vector(0, 1)
@@ -436,6 +440,8 @@ class EdSim():
 
         else:
             # update
+
+
             
             # count down the clap for debounce
             self.clap_timer -= 16
@@ -533,7 +539,9 @@ Ed = EdSim()
 @bind(edsim_worker, "message")
 def onmessage(e):
     """Handles the messages sent by the worker."""
+    Ed.ed.instruction_queue.append((e, False))
     if e.data[0] == "drive":
+        window.console.log("New Drive() call.");
         speed = int(e.data[2]) * 0.25
         if e.data[1] == EDSim.BACKWARD or e.data[1] == EDSim.FORWARD: 
             if e.data[1] == EDSim.BACKWARD: 
