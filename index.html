@@ -179,11 +179,30 @@
 <script src="js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
 <script src="js/ace/mode-python.js" type="text/javascript" charset="utf-8"></script>
 <script src="js/ace/ext-language-tools.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/ace/snippets/python.js"></script>
 <script>
     resize();
     var editor = ace.edit("editor");
     editor.$blockScrolling = Infinity;
     editor_exists = true;
+
+    var PythonMode = ace.require("ace/mode/python").Mode;
+    editor.session.setMode(new PythonMode());
+    ace.require("ace/ext/language_tools");
+    editor.setOptions({
+        fontSize: "11pt",
+        enableSnippets: true,
+        enableLiveAutocompletion: true,
+        enableBasicAutocompletion: true
+    });
+
+    editor.on("change", function () {
+        if (pynode_editor !== undefined) {
+            enable_editor = false;
+            if (pynode_editor.enable_editor) pynode_editor.setCode(editor.getValue());
+            enable_editor = true;
+        }
+    });
 
     function getCode() {
         return editor.getValue();
@@ -230,21 +249,6 @@
     if (project_src !== undefined) {
         editor.setValue(project_src, -1);
     }
-    var PythonMode = ace.require("ace/mode/python").Mode;
-    editor.session.setMode(new PythonMode());
-    ace.require("ace/ext/language_tools");
-    editor.setOptions({
-        fontSize: "11pt",
-        enableBasicAutocompletion: true
-    });
-
-    editor.on("change", function () {
-        if (pynode_editor !== undefined) {
-            enable_editor = false;
-            if (pynode_editor.enable_editor) pynode_editor.setCode(editor.getValue());
-            enable_editor = true;
-        }
-    });
 
     document.getElementById("editorBox").style.visibility = "visible";
 </script>
