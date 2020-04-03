@@ -128,7 +128,6 @@ class EdSim():
         if unit == Ed.TIME_SECONDS:
             time = time * 1000
         
-        # TODO: assuming units are in milliseconds for now
         while (window.performance.now() - currTime < time):
             self.__checkQuit()
             
