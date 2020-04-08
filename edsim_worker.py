@@ -1,14 +1,14 @@
 """Web Worker script."""
 
-# In web workers, "window" is replaced by "self".
 import time
-#from browser import bind, self
 import sys
 import time
 import traceback
 import javascript
 import random
 import json
+
+# In web workers, "window" is replaced by "self".
 from browser import bind, self
 KEY_HOME          = 0xff50
 KEY_ESC           = 27
@@ -118,6 +118,15 @@ class EdSim():
         self.__checkQuit()
         
         send_message(["drive", direction, speed, duration])
+
+        array[510] = 0
+
+        while array[510] != 1:
+            continue
+
+        # set SABS to 0
+        # wait for SABS to be set to 1
+        # return
         
     def TimeWait(self, time, unit):
         # block!

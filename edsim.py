@@ -1,3 +1,5 @@
+"""Main script."""
+
 import sys
 import time
 import traceback
@@ -6,17 +8,12 @@ import random
 import json
 import math
 
+# In web workers, "window" is replaced by "self".
+from browser import alert, bind, document, html, load, self, timer, window, worker
+from browser.local_storage import storage
 from vector import *
 
-from browser import document, window, alert, timer, worker, bind, html, load
-from browser.local_storage import storage
-from collections import deque
-
-load("js/howler.js")
-load("js/planck-with-testbed.js")
-
-# Cursor control and motion
-KEY_HOME          = 0xff50
+# Cursor control and motion.
 KEY_ESC           = 27
 KEY_LEFT          = 37
 KEY_UP            = 38
@@ -27,34 +24,24 @@ KEY_A             = 65
 KEY_C             = 67
 KEY_S             = 83
 KEY_D             = 68
+KEY_HOME          = 0xff50
 KEY_PAGEUP        = 0xff55
 KEY_PAGEDOWN      = 0xff56
 KEY_END           = 0xff57
 KEY_BEGIN         = 0xff58
 
-
-# In web workers, "window" is replaced by "self".
-import time
-#from browser import bind, self
-import sys
-import time
-import traceback
-import javascript
-import random
-import json
-from browser import bind, self, window
-
+load("js/howler.js")
+load("js/planck-with-testbed.js")
 edsim_worker = worker.Worker("executor")
 
-test_buff = None
-array = None
-
 pl = window.planck
-
 visual_scale = 0.01
 
+shared = None
+array = None
+
 class EDSim():
-    # Unique constants
+    # Edison unique constants.
     V2                  =   1
     CM                  =   2
     TEMPO_MEDIUM        =   3
@@ -67,7 +54,7 @@ class EDSim():
     TIME_MILLISECONDS   =  10
     TIME_SECONDS        =  11
     
-    # values       
+    # Edison speed constants.
     SPEED_1             =   1
     SPEED_2             =   2
     SPEED_3             =   3
@@ -80,16 +67,16 @@ class EDSim():
     SPEED_10            =  10    
     SPEED_FULL          =  11
     
+    # Clap constants.
     CLAP_DETECTED       = True
     CLAP_NOT_DETECTED   = False
         
-    #settings
-    EdisonVersion   = V2
-    DistanceUnits   = CM
-    Tempo           = TEMPO_MEDIUM
+    # Edison settings.
+    EdisonVersion       = V2
+    DistanceUnits       = CM
+    Tempo               = TEMPO_MEDIUM
     
     def __init__(self, ctx, world, screen_width, screen_height, ED_Sim):
-        
         self.ctx = ctx
         self.world = world
         self.screen_width = screen_width
@@ -101,9 +88,6 @@ class EDSim():
         self.ED_Sim = ED_Sim                        
         
     def reset(self):
-        self.instruction_queue = deque()
-        self.current_instruction = None
-
         self.position           = Vector(250  * visual_scale, 200 * visual_scale)
         self.speed              = 0
         self.heading            = Vector(0, 1)
@@ -112,9 +96,11 @@ class EDSim():
         self.current_rotation   = 0
         self.target_rotation    = 0
         self.rotation_speed     = 0
+        self.rotation_complete  = False
         
         self.current_distance   = 0
         self.target_distance    = 0
+        self.distance_complete  = False
         
         self.leftLED            = False
         self.rightLED           = False
@@ -132,7 +118,6 @@ class EDSim():
                 
         self.box = self.world.createDynamicBody(pl.Vec2.new(self.position[0], self.position[1]))
 
-        
         vertices1 = [pl.Vec2(-self.width/2,		3.0 * self.height/4),
                     pl.Vec2(self.width/2, 		3.0 * self.height/4),
                     pl.Vec2(self.width/2, 		0),
@@ -147,7 +132,6 @@ class EDSim():
         shape2 = pl.Polygon.new(vertices2)        
         self.box.createFixture(shape2, 0.0)
         
-        
         #self.box.createFixture(pl.Circle.new(30 * visual_scale), 10.0);
                 
         self.box.setGravityScale(0)   
@@ -157,6 +141,7 @@ class EDSim():
         if self.current_rotation < self.target_rotation:
             self.current_rotation += abs(self.rotation_speed)
             self.orientation += self.rotation_speed
+
             # correct for overshoot
             if self.current_rotation > self.target_rotation:
                 self.orientation -= math.copysign(self.current_rotation - self.target_rotation, self.rotation_speed)
@@ -164,6 +149,8 @@ class EDSim():
             self.box.setAngularVelocity(self.rotation_speed)
         else:
             self.box.setAngularVelocity(0)
+            self.rotation_complete = True
+
             
         if self.current_distance < self.target_distance:
             self.current_distance += abs(self.speed)            
@@ -174,22 +161,24 @@ class EDSim():
             self.box.setLinearVelocity(pl.Vec2.new(heading[0], heading[1]))
         else:
             self.box.setLinearVelocity(pl.Vec2.new(0, 0))
-            
+            self.distance_complete = True
+
+        if self.rotation_complete and self.distance_complete:
+            # set SABS to 1
+            array[510] = 1
             
     def draw(self):
         return
-               
 
 class EdSim():
-    # states
+    # State constants.
     STATE_WAIT      =   0
     STATE_STOP      =   1
     STATE_RUN       =   2
     
     def __init__(self):
         global array
-        
-        
+
         self.canvas = document["canvas"]
         self.ctx = self.canvas.getContext('2d')		
         
@@ -221,11 +210,11 @@ class EdSim():
         document.bind("keydown", self._keydown)
         document.bind("keyup", self._keyup)           
                 
-        test_buff = window.SharedArrayBuffer.new(512)
-        array = window.Int8Array.new(test_buff)
+        shared = window.SharedArrayBuffer.new(512)
+        array = window.Int8Array.new(shared)
         
         window.console.log("Attempting to send shared data")
-        edsim_worker.send(test_buff) 
+        edsim_worker.send(shared) 
         
         howl = window.Howl
         self.clap_sound = howl.new({"src": ["audio/clap.mp3"]})
@@ -236,7 +225,7 @@ class EdSim():
         
         self.debug_draw = True
         
-        ####### Begin box2d physics
+        ######## Begin box2d physics.
 
         self.world = pl.World.new(pl.Vec2.new(0, -1000 * visual_scale));
         
@@ -257,7 +246,7 @@ class EdSim():
 
         self.ed = EDSim(self.ctx, self.world, self.width, self.height, self)
 
-        ####### End box2d physics        
+        ######## End box2d physics.
         
         self.reset()
 
@@ -440,9 +429,6 @@ class EdSim():
 
         else:
             # update
-
-
-            
             # count down the clap for debounce
             self.clap_timer -= 16
             if self.clap_timer <= 0:
@@ -494,10 +480,8 @@ class EdSim():
                 self.ctx.drawImage(self.ed.led_img, -anchorX * width, -anchorY * height)
             
             self.ctx.restore()
-                        
 
-
-            ### Begin Physics
+            ######## Begin physics.
             
             self.world.step(1/60)
             
@@ -516,7 +500,7 @@ class EdSim():
             
             self.ed.draw()
             
-            ### End Physics
+            ######## End physics.
             
             if self.debug_draw:
                 self.drawDebugLine()
@@ -539,7 +523,7 @@ Ed = EdSim()
 @bind(edsim_worker, "message")
 def onmessage(e):
     """Handles the messages sent by the worker."""
-    Ed.ed.instruction_queue.append((e, False))
+
     if e.data[0] == "drive":
         window.console.log("New Drive() call.");
         speed = int(e.data[2]) * 0.25
@@ -652,9 +636,3 @@ def button_resume(event):
 
 def save_code(event):
     window.saveCode()        
-        
-###################################################################################        
-
-
-
-
