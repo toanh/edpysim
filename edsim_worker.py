@@ -1,14 +1,14 @@
 """Web Worker script."""
 
-# In web workers, "window" is replaced by "self".
 import time
-#from browser import bind, self
 import sys
 import time
 import traceback
 import javascript
 import random
 import json
+
+# In web workers, "window" is replaced by "self".
 from browser import bind, self
 KEY_HOME          = 0xff50
 KEY_ESC           = 27
@@ -74,7 +74,7 @@ class EdSim():
     SPEED_8             =   8
     SPEED_9             =   9
     SPEED_10            =  10    
-    SPEED_FULL          =   0
+    SPEED_FULL          =  11
     
     CLAP_DETECTED       = True
     CLAP_NOT_DETECTED   = False
@@ -103,7 +103,7 @@ class EdSim():
         send_message(["linetracker", state])      
 
     def ReadLineState(self):
-        # the linestate is constantly updated by pyangeloEDSim in the sharedarraybuffer
+        # the linestate is constantly updated by edsim.py in the sharedarraybuffer
         if array[511] == 0:
             return EdSim.LINE_ON_BLACK
         elif array[511] == 1:
@@ -113,13 +113,20 @@ class EdSim():
     
     def Drive(self, direction, speed, duration):
         console.log("Trying to drive")
-        
-        if speed == EdSim.SPEED_FULL:
-            speed = 11
+        print("New drive call.")
             
         self.__checkQuit()
         
         send_message(["drive", direction, speed, duration])
+
+        array[510] = 0
+
+        while array[510] != 1:
+            continue
+
+        # set SABS to 0
+        # wait for SABS to be set to 1
+        # return
         
     def TimeWait(self, time, unit):
         # block!
@@ -138,6 +145,7 @@ class EdSim():
         send_message(["LED", False, state])
         
     def PlayBeep(self):
+        print("New beep call.")
         send_message(["beep"])
         
     def AddBall(self, x, y, radius):
