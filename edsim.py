@@ -43,7 +43,7 @@ import random
 import json
 from browser import bind, self, window
 
-PyAngeloWorker = worker.Worker("executor")
+edsim_worker = worker.Worker("executor")
 
 test_buff = None
 array = None
@@ -64,6 +64,7 @@ class EDSim():
     SPIN_RIGHT          =   8
     SPIN_LEFT           =   9
     TIME_MILLISECONDS   =  10
+    TIME_SECONDS        =  11
     
     # values       
     SPEED_1             =   1
@@ -220,7 +221,7 @@ class EdSim():
         array = window.Int8Array.new(test_buff)
         
         window.console.log("Attempting to send shared data")
-        PyAngeloWorker.send(test_buff) 
+        edsim_worker.send(test_buff) 
         
         howl = window.Howl
         self.clap_sound = howl.new({"src": ["audio/clap.mp3"]})
@@ -529,7 +530,7 @@ class EdSim():
                                         
 Ed = EdSim()
 
-@bind(PyAngeloWorker, "message")
+@bind(edsim_worker, "message")
 def onmessage(e):
     """Handles the messages sent by the worker."""
     if e.data[0] == "drive":
@@ -616,7 +617,7 @@ def do_play():
         success = True
         try:
             # try and run the code in the web worker!!!!
-            PyAngeloWorker.send(["run", src])
+            edsim_worker.send(["run", src])
         except Exception as exc:
             alert("Error!");
             traceback.print_exc(file=sys.stderr)

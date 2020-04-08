@@ -61,6 +61,7 @@ class EdSim():
     SPIN_RIGHT          =   8
     SPIN_LEFT           =   9
     TIME_MILLISECONDS   =  10
+    TIME_SECONDS        =  11
     
     # values       
     SPEED_1             =   1
@@ -123,8 +124,10 @@ class EdSim():
     def TimeWait(self, time, unit):
         # block!
         currTime = window.performance.now()
+
+        if unit == Ed.TIME_SECONDS:
+            time = time * 1000
         
-        # TODO: assuming units are in milliseconds for now
         while (window.performance.now() - currTime < time):
             self.__checkQuit()
             
