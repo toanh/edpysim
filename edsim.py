@@ -508,12 +508,11 @@ class EdSim():
             if self.state == self.STATE_RUN:
                 if self.anim_timer <= 0:
                     self.anim_timer = self.blink_running
-                
                     self.show_playing_text = not self.show_playing_text
                 if self.show_playing_text:
-                    self.ctx.fillStyle = "#ffffff"; 
-                    self.ctx.font = "20px Georgia";                    
-                    self.ctx.fillText("Running...", 10, 30);  
+                    self.ctx.fillStyle = "#ffffff";
+                    self.ctx.font = "20px Georgia";
+                    self.ctx.fillText("Running...", 10, 30);
             
             #self.ctx.drawImage(self.ed.img, self.ed.position[0] - self.ed.width//2, \
             #                                self.height - self.ed.position[1] - self.ed.height//2)
@@ -558,11 +557,11 @@ def onmessage(e):
     elif e.data[0] == "waitdone":
         window.console.log("finished waiting");
         if Ed.state == Ed.STATE_WAIT:
-            Ed.state = Ed.STATE_STOP    
+            Ed.state = Ed.STATE_STOP
         else:
             Ed.state = Ed.STATE_RUN                           
     elif e.data[0] == "stop":
-        window.console.log("stopped");            
+        window.console.log("stopped");
         Ed.state = Ed.STATE_STOP
     elif e.data[0] == "print":
         do_print(e.data[1])
